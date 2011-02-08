@@ -37,17 +37,17 @@ double spline_cubic(const double a[4], double x)
 		mu[i] = 1. / l[i];
 		z[i] = (alpha[i] - z[i-1]) / l[i];
 	}
-	l[3] = 1.;
-	z[3] = 0.;
-	c[3] = 0.;
+	l[3] = 1.0;
+	z[3] = 0.0;
+	c[3] = 0.0;
 	for(j = 2; 0 <= j; j--) {
 		c[j] = z[j] - mu[j] * c[j+1];
 		b[j] = a[j+1] - a[j] - (c[j+1] + 2. * c[j]) / 3.;
 		d[j] = (c[j+1] - c[j]) / 3.;
 	}
 	
-	double minv = a[1] < a[2] ? a[1] : a[2];
-	double maxv = a[2] > a[1] ? a[2] : a[1];
+	double minv = min(a[1],a[2]);
+	double maxv = max(a[2],a[1]);
 	return min(maxv,max(minv,(a[1] + b[1] * x + c[1] * x * x + d[1] * x * x * x )));
 }
 
@@ -67,8 +67,9 @@ double spline_interpolate( double **d, int width, int height, double x, double y
 		}
 	}
 	
-	for( int j=0; j<4; j++ )
+	for( int j=0; j<4; j++ ) {
 		xn[j] = spline_cubic( &f[4*j], x - (int)x );
+	}
 	
 	return spline_cubic( xn, y - (int)y );
 }

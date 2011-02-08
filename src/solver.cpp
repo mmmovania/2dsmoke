@@ -112,9 +112,8 @@ static void expand( double **coarse, double **fine, int fn ) {
 // TODO: Might Be Better Implement Full Multigrid Method
 #define MAX_LAYER		8
 static void mgv( double **x, double **b, int n, int recr=0 ) {
-	// Pre-smoothing
-	smooth( x, b, n, 4 );
 	
+	// Memory Saving Part
 	static double **fine_r[MAX_LAYER];
 	static double **fine_e[MAX_LAYER];
 	static double **coarse_r[MAX_LAYER];
@@ -130,7 +129,6 @@ static void mgv( double **x, double **b, int n, int recr=0 ) {
 		initialized = true;
 	}
 	
-	// Compute Residual
 	if( ! fine_r[recr] ) fine_r[recr] = alloc2D(n);
 	if( ! fine_e[recr] ) fine_e[recr] = alloc2D(n);
 	if( ! coarse_r[recr] ) coarse_r[recr] = alloc2D(n/2);
@@ -140,6 +138,11 @@ static void mgv( double **x, double **b, int n, int recr=0 ) {
 	clear(fine_e[recr],n);
 	clear(coarse_r[recr],n/2);
 	clear(coarse_e[recr],n/2);
+	
+///////////// Beginning of V-Cycle
+	
+	// Pre-smoothing
+	smooth( x, b, n, 4 );
 	
 	// Compute Residual
 	residual( x, b, fine_r[recr], n );
@@ -211,7 +214,7 @@ double solver::solve( int method, int numiter, double **x, double **b, int n ) {
 		case 2:
 			// Multigrid Method
 			mgv(x,b,n);
-			smooth( x, b, n, 4 );
+			smooth( x, b, n, 8 );
 			break;
 	}
 	residual( x, b, r, n );

@@ -149,7 +149,7 @@ static void advect_diff( int method, double ***u, double **c, int n, int cn, dou
 	static double **up[2] = { alloc2D(n), alloc2D(n) };
 	
 	// Advect X Flow
-	FOR_EVERY_X_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_X_FLOW(n) {
 		double v[2] = { u[0][i][j], (u_ref(1,i-1,j)+u_ref(1,i,j)+u_ref(1,i-1,j+1)+u_ref(1,i,j+1))/4.0 };
 		
 		tmp[0][i][j] = 0.0;
@@ -164,7 +164,7 @@ static void advect_diff( int method, double ***u, double **c, int n, int cn, dou
 	} END_FOR
 	
 	// Advect Y Flow
-	FOR_EVERY_Y_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_Y_FLOW(n) {
 		double v[2] = { (u_ref(0,i,j-1)+u_ref(0,i,j)+u_ref(0,i+1,j)+u_ref(0,i+1,j-1))/4.0, u[1][i][j] };
 		
 		tmp[1][i][j] = 0.0;
@@ -179,12 +179,12 @@ static void advect_diff( int method, double ***u, double **c, int n, int cn, dou
 	} END_FOR
 	
 	// Advect Concentration
-	FOR_EVERY_CELL(n) {
+	OPENMP_FOR FOR_EVERY_CELL(n) {
 		up[0][i][j] = 0.5*u[0][i][j]+0.5*u[0][i+1][j];
 		up[1][i][j] = 0.5*u[1][i][j]+0.5*u[1][i][j+1];
 	} END_FOR
 	
-	FOR_EVERY_CELL(cn) {
+	OPENMP_FOR FOR_EVERY_CELL(cn) {
 		double x = i*n/(double)cn;
 		double y = j*n/(double)cn;
 		double v[2] = { linear_interpolate( up[0], n, n, x, y ), linear_interpolate( up[1], n, n, x, y ) };
@@ -201,57 +201,59 @@ static void advect_diff( int method, double ***u, double **c, int n, int cn, dou
 	} END_FOR
 	
 	// Compute Final Flow
-	FOR_EVERY_X_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_X_FLOW(n) {
 		u[0][i][j] += dt*tmp[0][i][j]/h;
 	} END_FOR
 	
-	FOR_EVERY_Y_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_Y_FLOW(n) {
 		u[1][i][j] += dt*tmp[1][i][j]/h;
 	} END_FOR
 	
 	// Compute Final Concentration
-	FOR_EVERY_CELL(cn) {
+	OPENMP_FOR FOR_EVERY_CELL(cn) {
 		c[i][j] += dt*tmp[2][i][j]/h;
 	} END_FOR	
 }
 
 static void maccormack ( double **d, double **d0, int width, int height, double ***u, float dt )
 {
-	for( int i=0; i<width; i++ ) {
-		for( int j=0; j<height; j++ ) {
-	
-			double x = min(width-1,max(0.0,i-dt*gn*u[0][i][j]));
-			double y = min(height-1,max(0.0,j-dt*gn*u[1][i][j]));
-			
-			int i0 = min(width-2,max(0,(int)x));
-			int j0 = min(height-2,max(0,(int)y));
-			
-			int i1 = i0+1;
-			int j1 = j0+1;
-			
-			double phi_n_1_hat = interp_func( d0, width, height, x, y );
-			double u_hat = interp_func( u[0], width, height, x, y );
-			double v_hat = interp_func( u[1], width, height, x, y );
-			
-			x += dt*gn*u_hat;
-			y += dt*gn*v_hat;
-			
-			double phi_n_hat = interp_func( d0, width, height, x, y );
-			
-			double min_phi = min( min( min( d0[i0][j0], d0[i1][j0] ), d0[i0][j1] ), d0[i1][j1] );
-			double max_phi = max( max( max( d0[i0][j0], d0[i1][j0] ), d0[i0][j1] ), d0[i1][j1] );
-			double r = phi_n_1_hat + 0.5*( d0[i][j] - phi_n_hat);
-			
-			d[i][j] = max( min(r, max_phi), min_phi );
-		} 
+	OPENMP_FOR
+	for( int n=0; n<width*height; n++ ) {
+		int i = n%width;
+		int j = n/width;
+		
+		double x = min(width-1,max(0.0,i-dt*gn*u[0][i][j]));
+		double y = min(height-1,max(0.0,j-dt*gn*u[1][i][j]));
+		
+		int i0 = min(width-2,max(0,(int)x));
+		int j0 = min(height-2,max(0,(int)y));
+		
+		int i1 = i0+1;
+		int j1 = j0+1;
+		
+		double phi_n_1_hat = interp_func( d0, width, height, x, y );
+		double u_hat = interp_func( u[0], width, height, x, y );
+		double v_hat = interp_func( u[1], width, height, x, y );
+		
+		x += dt*gn*u_hat;
+		y += dt*gn*v_hat;
+		
+		double phi_n_hat = interp_func( d0, width, height, x, y );
+		
+		double min_phi = min( min( min( d0[i0][j0], d0[i1][j0] ), d0[i0][j1] ), d0[i1][j1] );
+		double max_phi = max( max( max( d0[i0][j0], d0[i1][j0] ), d0[i0][j1] ), d0[i1][j1] );
+		double r = phi_n_1_hat + 0.5*( d0[i][j] - phi_n_hat);
+		
+		d[i][j] = max( min(r, max_phi), min_phi );
 	}
 }
 
 static void semiLagrangian( double **d, double **d0, int width, int height, double ***u, float dt ) {
-	for( int i=0; i<width; i++ ) {
-		for( int j=0; j<height; j++ ) {
-			d[i][j] = interp_func( d0, width, height, i-gn*u[0][i][j]*dt, j-gn*u[1][i][j]*dt );
-		}
+	OPENMP_FOR
+	for( int n=0; n<width*height; n++ ) {
+		int i = n%width;
+		int j = n/width;
+		d[i][j] = interp_func( d0, width, height, i-gn*u[0][i][j]*dt, j-gn*u[1][i][j]*dt );
 	}
 }
 
@@ -280,22 +282,22 @@ static void advect_semiLagrangian( int method, int interp, double ***u, double *
 	static double **up[2] = { alloc2D(n), alloc2D(n) };
 	static double **uc[2] = { alloc2D(cn), alloc2D(cn) };
 	
-	FOR_EVERY_X_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_X_FLOW(n) {
 		ux[0][i][j] = u[0][i][j];
 		ux[1][i][j] = (u_ref(1,i-1,j)+u_ref(1,i,j)+u_ref(1,i-1,j+1)+u_ref(1,i,j+1))/4.0;
 	} END_FOR
 	
-	FOR_EVERY_Y_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_Y_FLOW(n) {
 		uy[0][i][j] = (u_ref(0,i,j-1)+u_ref(0,i,j)+u_ref(0,i+1,j)+u_ref(0,i+1,j-1))/4.0;
 		uy[1][i][j] = u[1][i][j];
 	} END_FOR
 	
-	FOR_EVERY_CELL(n) {
+	OPENMP_FOR FOR_EVERY_CELL(n) {
 		up[0][i][j] = 0.5*u[0][i][j]+0.5*u[0][i+1][j];
 		up[1][i][j] = 0.5*u[1][i][j]+0.5*u[1][i][j+1];
 	} END_FOR
 	
-	FOR_EVERY_CELL(cn) {
+	OPENMP_FOR FOR_EVERY_CELL(cn) {
 		double x = i*n/(double)cn;
 		double y = j*n/(double)cn;
 		uc[0][i][j] = interp_func( up[0], n, n, x, y );
@@ -326,16 +328,16 @@ static void advect_semiLagrangian( int method, int interp, double ***u, double *
 	}
 	
 	// Compute Final Flow
-	FOR_EVERY_X_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_X_FLOW(n) {
 		u[0][i][j] = tmp[0][i][j];
 	} END_FOR
 	
-	FOR_EVERY_Y_FLOW(n) {
+	OPENMP_FOR FOR_EVERY_Y_FLOW(n) {
 		u[1][i][j] = tmp[1][i][j];
 	} END_FOR
 	
 	// Compute Final Concentration
-	FOR_EVERY_CELL(cn) {
+	OPENMP_FOR FOR_EVERY_CELL(cn) {
 		c[i][j] = tmp[2][i][j];
 	} END_FOR
 }

@@ -2,8 +2,6 @@
  *  utility.cpp
  *  smoke
  *
- *  Created by Ryoichi Ando on 2/7/11.
- *
  */
 
 #include "utility.h"

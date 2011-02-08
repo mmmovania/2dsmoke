@@ -2,8 +2,6 @@
  *  smoke2D.h
  *  smoke
  *
- *  Created by Ryoichi Ando on 2/7/11.
- *
  */
 
 namespace smoke2D {

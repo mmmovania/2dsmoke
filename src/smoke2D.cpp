@@ -2,8 +2,6 @@
  *  smoke2D.cpp
  *  smoke
  *
- *  Created by Ryoichi Ando on 2/7/11.
- *
  */
 
 #include "smoke2D.h"

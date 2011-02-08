@@ -2,8 +2,7 @@
  *  utility.cpp
  *  smoke
  *
- *  Created by mscp on 2/7/11.
- *  Copyright 2011 __MyCompanyName__. All rights reserved.
+ *  Created by Ryoichi Ando on 2/7/11.
  *
  */
 

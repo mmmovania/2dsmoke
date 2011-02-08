@@ -14,7 +14,13 @@ Mac:
 
 Windows:
 
-Just open with Visual Studio
+Just open with Visual Studio and build
+
+
+Run just like
+./smoke 64
+
+where 64 is a grid size
 
 
 

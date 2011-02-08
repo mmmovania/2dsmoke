@@ -30,6 +30,7 @@
 
 /* Begin PBXFileReference section */
 		8DD76FB20486AB0100D96B5E /* smoke */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = smoke; sourceTree = BUILT_PRODUCTS_DIR; };
+		C10682871301956C007B611D /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		C1C4799A12FF870400F3F1D6 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		C1C479B012FF871300F3F1D6 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		C1C479D912FF875E00F3F1D6 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = "<group>"; };
@@ -79,6 +80,7 @@
 				C1DC97A1130008E200279645 /* advect.cpp */,
 				C1DC97131300031200279645 /* utility.h */,
 				C1DC97141300031200279645 /* utility.cpp */,
+				C10682871301956C007B611D /* README.txt */,
 			);
 			name = Source;
 			sourceTree = "<group>";

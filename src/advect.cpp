@@ -27,14 +27,14 @@ double spline_cubic(const double a[4], double x)
 	double alpha[4], l[4], mu[4], z[4];
 	double b[4], c[4], d[4];
 	for(i = 1; i < 3; i++) {
-		alpha[i] = 3. * (a[i+1] - a[i]) - 3. * (a[i] - a[i-1]);
+		alpha[i] = 3.0 * (a[i+1] - a[i]) - 3.0 * (a[i] - a[i-1]);
 	}
-	l[0] = 1.;
-	mu[0] = 0.;
-	z[0] = 0.;
+	l[0] = 1.0;
+	mu[0] = 0.0;
+	z[0] = 0.0;
 	for(i = 1; i < 3; i++) {
-		l[i] = 4. - mu[i-1];
-		mu[i] = 1. / l[i];
+		l[i] = 4.0 - mu[i-1];
+		mu[i] = 1.0 / l[i];
 		z[i] = (alpha[i] - z[i-1]) / l[i];
 	}
 	l[3] = 1.0;
@@ -42,8 +42,8 @@ double spline_cubic(const double a[4], double x)
 	c[3] = 0.0;
 	for(j = 2; 0 <= j; j--) {
 		c[j] = z[j] - mu[j] * c[j+1];
-		b[j] = a[j+1] - a[j] - (c[j+1] + 2. * c[j]) / 3.;
-		d[j] = (c[j+1] - c[j]) / 3.;
+		b[j] = a[j+1] - a[j] - (c[j+1] + 2.0 * c[j]) / 3.0;
+		d[j] = (c[j+1] - c[j]) / 3.0;
 	}
 	
 	double minv = min(a[1],a[2]);

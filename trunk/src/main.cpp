@@ -63,7 +63,12 @@ static void motion ( int x, int y ) {
 
 int main (int argc, char * argv[]) {
 	
+#ifdef _OPENMP
+	int grid_size = 128;
+#else
 	int grid_size = 64;
+#endif
+	
 	if( argc == 2  ) {
 		sscanf( argv[1], "%d", &grid_size );
 	}

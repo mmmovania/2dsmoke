@@ -166,12 +166,6 @@ static void subtract_pressure() {
 	} END_FOR
 }
 
-static void decrease_concentration() {
-	FOR_EVERY_CELL(N) {
-		c[i][j] *= 0.997;
-	} END_FOR
-}
-
 static void advection() {
 	tickTime();
 	advect::advect(advection_num,interp_num,u,c,N,M,DT);
@@ -221,7 +215,6 @@ static void computeStep() {
 	comp_divergence();
 	compute_pressure();
 	subtract_pressure();
-	decrease_concentration();
 	advection();
 	//vorticityConfinement();
 	
@@ -255,22 +248,7 @@ void smoke2D::display() {
 #endif
 	
 	if( dragging && show_pressure ) {
-#if 0
-		// Draw Divergence
-		FOR_EVERY_CELL(N) {
-			double div = 10.0*d[i][j];
-			glColor4d(div>0,0.0,div<0,fabs(div));
-			
-			double h = 1.0/N;
-			double p[2] = {i*h,j*h};
-			glBegin(GL_QUADS);
-			glVertex2d(p[0],p[1]);
-			glVertex2d(p[0]+h,p[1]);
-			glVertex2d(p[0]+h,p[1]+h);
-			glVertex2d(p[0],p[1]+h);
-			glEnd();
-		} END_FOR
-#elif 1
+
 		// Draw Pressure
 		double minv = 1.0e8;
 		double maxv = -1.0e8;
@@ -280,7 +258,7 @@ void smoke2D::display() {
 		} END_FOR
 		 
 		FOR_EVERY_CELL(N) {
-			double press = 5000.0*p[i][j];//(p[i][j]-minv)/(maxv-minv) - 1.0;
+			double press = 3000.0*(N == 128 ? 10 : 1)*p[i][j];
 			glColor4d(press>0,0.0,press<0,fabs(press));
 			
 			double h = 1.0/N;
@@ -292,22 +270,6 @@ void smoke2D::display() {
 			glVertex2d(p[0],p[1]+h);
 			glEnd();
 		} END_FOR
-#elif 0
-		// Draw Vorticy
-		FOR_EVERY_CELL(N) {
-			double vt = 0.5*vort[i][j];
-			glColor4d(vt>0,0.0,vt<0,fabs(vt));
-			
-			double h = 1.0/N;
-			double p[2] = {i*h,j*h};
-			glBegin(GL_QUADS);
-			glVertex2d(p[0],p[1]);
-			glVertex2d(p[0]+h,p[1]);
-			glVertex2d(p[0]+h,p[1]+h);
-			glVertex2d(p[0],p[1]+h);
-			glEnd();
-		} END_FOR
-#endif
 	}
 	
 #if 0
@@ -442,7 +404,6 @@ void smoke2D::keyDown( unsigned char key ) {
 void smoke2D::mouse( double x, double y, int state ) {
 	if( state == 1 ) {
 		dragging = true;
-		motion( x, y, 0.0, 0.0 );
 	} else {
 		dragging = false;
 	}

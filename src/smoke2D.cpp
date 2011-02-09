@@ -34,7 +34,7 @@ int	M;		// Smoke Grid Size
 
 static int solver_num = 2;
 static int advection_num = 3;
-static int interp_num = 1;
+static int interp_num = 0;
 
 static double ***u = NULL;		// Access Bracket u[DIM][X][Y] ( Staggered Grid )
 static double **c = NULL;		// Equivalent to c[N][N]

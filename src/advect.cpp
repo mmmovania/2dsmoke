@@ -11,7 +11,7 @@
 #include <math.h>
 
 const char *advection_name[] = { "Upwind", "WENO5", "QUICK", "Semi-Lagrangian", "MacCormack", NULL };
-const char *interp_name[] = { "Linear", "Clamped Cubic Spline", NULL };
+const char *interp_name[] = { "Linear", "Clamped Cubic Spline", "Monotinic Cubic", NULL };
 
 // Global References for Instance Access
 static double ***gu = NULL;
@@ -21,8 +21,51 @@ static int gn = 0;
 static int gcn = 0;
 static double (*interp_func)( double **d, int w, int h, double x, double y ) = NULL;
 
-double spline_cubic(const double a[4], double x)
-{
+double monotonic_cubic_4( const double a[4], double x ) {
+	
+	double d0 = a[1] - a[0];
+	double d1 = a[2] - a[1];
+	double d2 = a[3] - a[2];
+
+	if( ! d1 ) {
+		d0 = d2 = 0.0;
+	} else {
+		double p = d1 > 0.0 ? 1.0 : -1.0;
+		d0 = p*fabs(d0);
+		d2 = p*fabs(d2);
+	}
+
+	double a3 = d2+d0;
+	double a2 = -d2-2.0*d0;
+	double a1 = d1+d0;
+	double a0 = a[1];
+	double y = a3*x*x*x+a2*x*x+a1*x+a0;
+	return y;
+}
+
+double monotonic_cubic( double **d, int width, int height, double x, double y ) {
+	double f[16];
+	double xn[4];
+	
+	x = max(0.0,min(width,x));
+	y = max(0.0,min(height,y));
+	
+	for( int j=0; j<4; j++ ) {
+		for( int i=0; i<4; i++ ) {
+			int h = (int)x - 1 + i;
+			int v = (int)y - 1 + j;
+			f[4*j+i] = d[min(width-1,max(0,h))][min(height-1,max(0,v))];
+		}
+	}
+	
+	for( int j=0; j<4; j++ ) {
+		xn[j] = monotonic_cubic_4( &f[4*j], x - (int)x );
+	}
+	
+	return monotonic_cubic_4( xn, y - (int)y );
+}
+
+double spline_cubic(const double a[4], double x) {
 	int i, j;
 	double alpha[4], l[4], mu[4], z[4];
 	double b[4], c[4], d[4];
@@ -51,8 +94,7 @@ double spline_cubic(const double a[4], double x)
 	return min(maxv,max(minv,(a[1] + b[1] * x + c[1] * x * x + d[1] * x * x * x )));
 }
 
-double spline_interpolate( double **d, int width, int height, double x, double y )
-{
+double spline_interpolate( double **d, int width, int height, double x, double y ) {
 	double f[16];
 	double xn[4];
 	
@@ -74,8 +116,7 @@ double spline_interpolate( double **d, int width, int height, double x, double y
 	return spline_cubic( xn, y - (int)y );
 }
 
-static double linear_interpolate ( double **d, int width, int height, double x, double y )
-{
+static double linear_interpolate ( double **d, int width, int height, double x, double y ) {
 	x = max(0.0,min(width,x));
 	y = max(0.0,min(height,y));
 	int i = min(x,width-2);
@@ -355,8 +396,10 @@ void advect::advect( int method, int interp, double ***u, double **c, int n, int
 	// Set Interpolation Method
 	if( interp == 0 ) {
 		interp_func = linear_interpolate;
-	} else {
+	} else if(interp == 1)  {
 		interp_func = spline_interpolate;
+	} else {
+		interp_func = monotonic_cubic;
 	}
 	
 	if( method < 3 ) { 

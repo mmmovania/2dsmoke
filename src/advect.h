@@ -13,7 +13,8 @@
 
 // Interp:
 // 0: Linear Interpolation
-// 1: Cubic Interpolation
+// 1: Cubic Spline Interpolation
+// 2: Monotonic Cubic Interpolation
 
 // u:
 // Staggered Velocity Field

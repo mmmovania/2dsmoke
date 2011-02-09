@@ -12,11 +12,11 @@
 
 const char *advection_name[] = { "Upwind", "WENO5", "QUICK", "Semi-Lagrangian", "MacCormack", NULL };
 const char *interp_name[] = { "Linear", "Clamped Cubic Spline", "Monotinic Cubic", NULL };
+const char *integrator_name[] = { "1st Order Euler", "2nd Order Modified Euler", "4th Order Runge-Kutta", NULL };
 
 // Global References for Instance Access
 static double ***gu = NULL;
 static double **gc = NULL;
-static double **tmp[3] = { NULL, NULL, NULL };
 static int gn = 0;
 static int gcn = 0;
 static double (*interp_func)( double **d, int w, int h, double x, double y ) = NULL;
@@ -185,38 +185,38 @@ static double advdiff( int method, double u, double d0, double d1, double d2, do
 }
 
 // 2D Derivative Advection
-static void advect_diff( int method, double ***u, double **c, int n, int cn, double dt ) {
-	double h = 1.0/n;
+static void advect_diff( int method, double ***u, double **c, int n, int cn, double **out[3], double dt ) {
 	static double **up[2] = { alloc2D(n), alloc2D(n) };
 	
 	// Advect X Flow
 	OPENMP_FOR FOR_EVERY_X_FLOW(n) {
 		double v[2] = { u[0][i][j], (u_ref(1,i-1,j)+u_ref(1,i,j)+u_ref(1,i-1,j+1)+u_ref(1,i,j+1))/4.0 };
 		
-		tmp[0][i][j] = 0.0;
+		out[0][i][j] = 0.0;
 		
 		// X Direction
-		tmp[0][i][j] += advdiff( method, v[0], u_ref(0,i-3,j), u_ref(0,i-2,j), u_ref(0,i-1,j), u_ref(0,i,j), 
-								u_ref(0,i+1,j), u_ref(0,i+2,j), u_ref(0,i+3,j) );
+		out[0][i][j] += advdiff( method, v[0], u_ref(0,i-3,j), u_ref(0,i-2,j), u_ref(0,i-1,j), u_ref(0,i,j), 
+								u_ref(0,i+1,j), u_ref(0,i+2,j), u_ref(0,i+3,j) ) * n;
 		
 		// Y Direction
-		tmp[0][i][j] += advdiff( method, v[1], u_ref(0,i,j-3), u_ref(0,i,j-2), u_ref(0,i,j-1), u_ref(0,i,j), 
-								u_ref(0,i,j+1), u_ref(0,i,j+2), u_ref(0,i,j+3) );
+		out[0][i][j] += advdiff( method, v[1], u_ref(0,i,j-3), u_ref(0,i,j-2), u_ref(0,i,j-1), u_ref(0,i,j), 
+								u_ref(0,i,j+1), u_ref(0,i,j+2), u_ref(0,i,j+3) ) * n;
 	} END_FOR
 	
 	// Advect Y Flow
 	OPENMP_FOR FOR_EVERY_Y_FLOW(n) {
 		double v[2] = { (u_ref(0,i,j-1)+u_ref(0,i,j)+u_ref(0,i+1,j)+u_ref(0,i+1,j-1))/4.0, u[1][i][j] };
 		
-		tmp[1][i][j] = 0.0;
+		out[1][i][j] = 0.0;
 		
 		// X Direction
-		tmp[1][i][j] += advdiff( method, v[0], u_ref(1,i-3,j), u_ref(1,i-2,j), u_ref(1,i-1,j), u_ref(1,i,j), 
-								u_ref(1,i+1,j), u_ref(1,i+2,j), u_ref(1,i+3,j) );
+		out[1][i][j] += advdiff( method, v[0], u_ref(1,i-3,j), u_ref(1,i-2,j), u_ref(1,i-1,j), u_ref(1,i,j), 
+								u_ref(1,i+1,j), u_ref(1,i+2,j), u_ref(1,i+3,j) ) * n;
 		
 		// Y Direction
-		tmp[1][i][j] += advdiff( method, v[1], u_ref(1,i,j-3), u_ref(1,i,j-2), u_ref(1,i,j-1), u_ref(1,i,j), 
-								u_ref(1,i,j+1), u_ref(1,i,j+2), u_ref(1,i,j+3) );
+		out[1][i][j] += advdiff( method, v[1], u_ref(1,i,j-3), u_ref(1,i,j-2), u_ref(1,i,j-1), u_ref(1,i,j), 
+								u_ref(1,i,j+1), u_ref(1,i,j+2), u_ref(1,i,j+3) ) * n;
+		
 	} END_FOR
 	
 	// Advect Concentration
@@ -230,30 +230,17 @@ static void advect_diff( int method, double ***u, double **c, int n, int cn, dou
 		double y = j*n/(double)cn;
 		double v[2] = { linear_interpolate( up[0], n, n, x, y ), linear_interpolate( up[1], n, n, x, y ) };
 
-		tmp[2][i][j] = 0.0;
+		out[2][i][j] = 0.0;
 		
 		// X Direction
-		tmp[2][i][j] += advdiff( method, v[0], c_ref(i-3,j), c_ref(i-2,j), c_ref(i-1,j), c_ref(i,j), 
-								c_ref(i+1,j), c_ref(i+2,j), c_ref(i+3,j) );
+		out[2][i][j] += advdiff( method, v[0], c_ref(i-3,j), c_ref(i-2,j), c_ref(i-1,j), c_ref(i,j), 
+								c_ref(i+1,j), c_ref(i+2,j), c_ref(i+3,j) ) * cn;
 		
 		// Y Direction
-		tmp[2][i][j] += advdiff( method, v[1], c_ref(i,j-3), c_ref(i,j-2), c_ref(i,j-1), c_ref(i,j), 
-								c_ref(i,j+1), c_ref(i,j+2), c_ref(i,j+3) );
+		out[2][i][j] += advdiff( method, v[1], c_ref(i,j-3), c_ref(i,j-2), c_ref(i,j-1), c_ref(i,j), 
+								c_ref(i,j+1), c_ref(i,j+2), c_ref(i,j+3) ) * cn;
+		
 	} END_FOR
-	
-	// Compute Final Flow
-	OPENMP_FOR FOR_EVERY_X_FLOW(n) {
-		u[0][i][j] += dt*tmp[0][i][j]/h;
-	} END_FOR
-	
-	OPENMP_FOR FOR_EVERY_Y_FLOW(n) {
-		u[1][i][j] += dt*tmp[1][i][j]/h;
-	} END_FOR
-	
-	// Compute Final Concentration
-	OPENMP_FOR FOR_EVERY_CELL(cn) {
-		c[i][j] += dt*tmp[2][i][j]/h;
-	} END_FOR	
 }
 
 static void maccormack ( double **d, double **d0, int width, int height, double ***u, float dt )
@@ -299,7 +286,10 @@ static void semiLagrangian( double **d, double **d0, int width, int height, doub
 }
 
 // Semi-Lagrangian Advection Method
-static void advect_semiLagrangian( int method, int interp, double ***u, double **c, int n, int cn, double dt ) {
+static void advect_semiLagrangian( int method, double ***u, double **c, int n, int cn, double **out[3], double dt ) {
+	
+	double h = 1.0/n;
+	double ch = 1.0/cn;
 	
 	// BackTrace Order
 	int order = 1;
@@ -348,50 +338,55 @@ static void advect_semiLagrangian( int method, int interp, double ***u, double *
 	// 1st Order Semi Advection
 	if( order == 1 ) {
 		// BackTrace X Flow
-		semiLagrangian( tmp[0], u[0], n+1, n, ux, dt );
+		semiLagrangian( out[0], u[0], n+1, n, ux, dt );
 
 		// BackTrace Y Flow
-		semiLagrangian( tmp[1], u[1], n, n+1, uy, dt );
+		semiLagrangian( out[1], u[1], n, n+1, uy, dt );
 			
 		// BackTrace Concentration
-		semiLagrangian( tmp[2], c, cn, cn, uc, dt );
+		semiLagrangian( out[2], c, cn, cn, uc, dt );
 		
 	// 2nd Order MacCormack Method
 	} else if( order == 2 ) {
 		// BackTrace X Flow
-		maccormack( tmp[0], u[0], n+1, n, ux, dt );
+		maccormack( out[0], u[0], n+1, n, ux, dt );
 		
 		// BackTrace Y Flow
-		maccormack( tmp[1], u[1], n, n+1, uy, dt );
+		maccormack( out[1], u[1], n, n+1, uy, dt );
 		
 		// BackTrace Concentration
-		maccormack( tmp[2], c, cn, cn, uc, dt );	
+		maccormack( out[2], c, cn, cn, uc, dt );	
 	}
-	
-	// Compute Final Flow
-	OPENMP_FOR FOR_EVERY_X_FLOW(n) {
-		u[0][i][j] = tmp[0][i][j];
-	} END_FOR
-	
-	OPENMP_FOR FOR_EVERY_Y_FLOW(n) {
-		u[1][i][j] = tmp[1][i][j];
-	} END_FOR
-	
-	// Compute Final Concentration
-	OPENMP_FOR FOR_EVERY_CELL(cn) {
-		c[i][j] = tmp[2][i][j];
-	} END_FOR
 }
 
-void advect::advect( int method, int interp, double ***u, double **c, int n, int cn, double dt ) {
+static double advect_step( int method, double ***u, double **c, int n, int cn, double ***out, double dt ) {
+	if( method < 3 ) { 
+		// Upwind or WENO5
+		advect_diff(method,u,c,n,cn,out,dt); // Watch for a CFL condition
+	} else {
+		// Semi-lagrangian
+		advect_semiLagrangian(method,u,c,n,cn,out,dt);
+	}
+}
+
+void advect::advect( int method, int interp, int integrator, double ***u, double **c, int n, int cn, double dt ) {
 	
 	gu = u;
 	gc = c;
 	gn = n;
 	gcn = cn;
-	if( ! tmp[0] ) tmp[0] = alloc2D(n+1);
-	if( ! tmp[1] ) tmp[1] = alloc2D(n+1);
-	if( ! tmp[2] ) tmp[2] = alloc2D(cn);
+	
+	double h = 1.0/n;
+	double ch = 1.0/cn;
+	
+	// Memory Allocation
+	static double **k[4][3] = { NULL, NULL, NULL, NULL };
+	static double **tmp[3] = { alloc2D(n+1), alloc2D(n+1), alloc2D(cn) };
+	for( int kn=0; kn<4; kn++ ) {
+		if( ! k[kn][0] ) k[kn][0] = alloc2D(n+1);
+		if( ! k[kn][1] ) k[kn][1] = alloc2D(n+1);
+		if( ! k[kn][2] ) k[kn][2] = alloc2D(cn);
+	}
 	
 	// Set Interpolation Method
 	if( interp == 0 ) {
@@ -402,11 +397,95 @@ void advect::advect( int method, int interp, double ***u, double **c, int n, int
 		interp_func = monotonic_cubic;
 	}
 	
-	if( method < 3 ) { 
-		// Upwind or WENO5
-		advect_diff(method,u,c,n,cn,dt); // Watch for a CFL condition
+	if( method < 3 ) {
+		if( integrator == 0 ) {			// Forward Euler Method
+			advect_step( method, u, c, n, cn, k[0], dt );
+			
+			op2D(u[0],u[0],k[0][0],1.0,dt,n+1);
+			op2D(u[1],u[1],k[0][1],1.0,dt,n+1);
+			op2D(c,c,k[0][2],1.0,dt,cn);
+			
+		} else if( integrator == 1 ) { // Modified Euler Method
+			// k0 = f'(x)
+			advect_step( method, u, c, n, cn, k[0], dt );
+			
+			// k1 = f'(x + k0*dt)
+			op2D(tmp[0], u[0], k[0][0], 1.0, dt, n+1);
+			op2D(tmp[1], u[1], k[0][1], 1.0, dt, n+1);
+			op2D(tmp[2], c,    k[0][2], 0.5, dt, cn);
+			advect_step( method, tmp, tmp[2], n, cn, k[1], dt );
+			
+			// y = x + 0.5*dt*(k0+k1)
+			op2D(u[0], u[0], k[0][0], 1.0, 0.5*dt, n+1 );
+			op2D(u[1], u[1], k[0][1], 1.0, 0.5*dt, n+1 );
+			op2D(c,    c,    k[0][2], 1.0, 0.5*dt, cn  );
+			
+			op2D(u[0], u[0], k[1][0], 1.0, 0.5*dt, n+1 );
+			op2D(u[1], u[1], k[1][1], 1.0, 0.5*dt, n+1 );
+			op2D(c,    c,    k[1][2], 1.0, 0.5*dt, cn  );
+			
+		} else if( integrator == 2  ) { // Runge-Kutta Method
+			// k0 = f'(x)
+			advect_step( method, u, c, n, cn, k[0], dt );
+			
+			// k1 = f'(x + 0.5*k0*dt)
+			op2D(tmp[0], u[0], k[0][0], 1.0, 0.5*dt, n+1);
+			op2D(tmp[1], u[1], k[0][1], 1.0, 0.5*dt, n+1);
+			op2D(tmp[2], c,    k[0][2], 0.5, 0.5*dt, cn);
+			advect_step( method, tmp, tmp[2], n, cn, k[1], dt );
+			
+			// k2 = f'(x + 0.5*k1*dt)
+			op2D(tmp[0], u[0], k[1][0], 1.0, 0.5*dt, n+1);
+			op2D(tmp[1], u[1], k[1][1], 1.0, 0.5*dt, n+1);
+			op2D(tmp[2], c,    k[1][2], 0.5, 0.5*dt, cn);
+			advect_step( method, tmp, tmp[2], n, cn, k[2], dt );
+			
+			// k3 = f'(x + 0.5*k2*dt)
+			op2D(tmp[0], u[0], k[2][0], 1.0, dt, n+1);
+			op2D(tmp[1], u[1], k[2][1], 1.0, dt, n+1);
+			op2D(tmp[2], c,    k[2][2], 0.5, dt, cn);
+			advect_step( method, tmp, tmp[2], n, cn, k[3], dt );
+			
+			// y = x + dt*(k0+2*k1+2*k2+k3)/6
+			op2D(u[0], u[0], k[0][0], 1.0, dt/6.0, n+1 );
+			op2D(u[1], u[1], k[0][1], 1.0, dt/6.0, n+1 );
+			op2D(c,    c,    k[0][2], 1.0, dt/6.0, cn  );
+			
+			op2D(u[0], u[0], k[1][0], 1.0, dt/3.0, n+1 );
+			op2D(u[1], u[1], k[1][1], 1.0, dt/3.0, n+1 );
+			op2D(c,    c,    k[1][2], 1.0, dt/3.0, cn  );
+			
+			op2D(u[0], u[0], k[2][0], 1.0, dt/3.0, n+1 );
+			op2D(u[1], u[1], k[2][1], 1.0, dt/3.0, n+1 );
+			op2D(c,    c,    k[2][2], 1.0, dt/3.0, cn  );
+			
+			op2D(u[0], u[0], k[3][0], 1.0, dt/6.0, n+1 );
+			op2D(u[1], u[1], k[3][1], 1.0, dt/6.0, n+1 );
+			op2D(c,    c,    k[3][2], 1.0, dt/6.0, cn  );
+		}
 	} else {
-		// Semi-lagrangian
-		advect_semiLagrangian(method,interp,u,c,n,cn,dt);
+		advect_step( method, u, c, n, cn, k[0], dt );
+		copy2D(u[0],k[0][0],n+1);
+		copy2D(u[1],k[0][1],n+1);
+		copy2D(c,k[0][2],cn);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -16,6 +16,11 @@
 // 1: Cubic Spline Interpolation
 // 2: Monotonic Cubic Interpolation
 
+// Integrator:
+// 0: Euler
+// 1: Modified Euler
+// 2: Runge-Kutta
+
 // u:
 // Staggered Velocity Field
 
@@ -30,7 +35,8 @@
 
 extern const char *advection_name[];
 extern const char *interp_name[];
+extern const char *integrator_name[];
 
 namespace advect {
-	void advect( int method, int interp, double ***u, double **c, int n, int cn, double dt );
+	void advect( int method, int interp, int integrator, double ***u, double **c, int n, int cn, double dt );
 }

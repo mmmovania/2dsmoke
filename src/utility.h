@@ -29,3 +29,5 @@
 
 double **alloc2D( int n );
 void free2D( double **ptr );
+void copy2D( double **dst, double **src, int n );
+void op2D( double **dst, double **src1, double **src2, double a, double b, int n ); // dst = a*src1 + b*src2

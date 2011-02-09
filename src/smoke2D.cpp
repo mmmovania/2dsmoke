@@ -28,13 +28,14 @@
 int	N;		// Fluid Grid Size
 int	M;		// Smoke Grid Size
 
-#define		DT		0.1				// Watch for a CFL Limit in case of Derivative Advection
+#define		DT		0.05				// Watch for a CFL Limit in case of Derivative Advection
 
 #define NUM_ITER	500
 
 static int solver_num = 2;
 static int advection_num = 3;
 static int interp_num = 0;
+static int integrator_num = 0;
 
 static double ***u = NULL;		// Access Bracket u[DIM][X][Y] ( Staggered Grid )
 static double **c = NULL;		// Equivalent to c[N][N]
@@ -168,7 +169,7 @@ static void subtract_pressure() {
 
 static void advection() {
 	tickTime();
-	advect::advect(advection_num,interp_num,u,c,N,M,DT);
+	advect::advect(advection_num,interp_num,integrator_num,u,c,N,M,DT);
 	advectTime = tickTime();
 }
 
@@ -258,7 +259,7 @@ void smoke2D::display() {
 		} END_FOR
 		 
 		FOR_EVERY_CELL(N) {
-			double press = 3000.0*(N == 128 ? 10 : 1)*p[i][j];
+			double press = 1000.0*(N == 128 ? 10 : 1)*p[i][j];
 			glColor4d(press>0,0.0,press<0,fabs(press));
 			
 			double h = 1.0/N;
@@ -344,8 +345,7 @@ void smoke2D::display() {
 	if( advection_num > 2 )
 		sprintf( tmp, "%s (Time=%.2fms, Interp=%s)", advection_name[advection_num], advectTime/(double)1000, interp_name[interp_num] );
 	else 
-		sprintf( tmp, "%s (Time=%.2fms)", advection_name[advection_num], advectTime/(double)1000  );
-	
+		sprintf( tmp, "%s (Time=%.2fms, Time Integrator=%s)", advection_name[advection_num], advectTime/(double)1000, integrator_name[integrator_num] );
 	cnt = 0;
 	drawBitmapString(tmp);
 	
@@ -363,12 +363,15 @@ void smoke2D::display() {
 	raw_drawBitmapString("Press \"i\" to switch Semi-Lagrangian interpolation method");
 	
 	glRasterPos2d(0.04, 0.81);
-	raw_drawBitmapString("Press \"p\" to toggle pressure view");
+	raw_drawBitmapString("Press \"t\" to switch time integrator");
 	
 	glRasterPos2d(0.04, 0.78);
-	raw_drawBitmapString("Press \"v\" to toggle velocity view");
+	raw_drawBitmapString("Press \"p\" to toggle pressure view");
 	
 	glRasterPos2d(0.04, 0.75);
+	raw_drawBitmapString("Press \"v\" to toggle velocity view");
+	
+	glRasterPos2d(0.04, 0.72);
 	raw_drawBitmapString("Press \"c\" to clear all");
 }
 
@@ -395,6 +398,10 @@ void smoke2D::keyDown( unsigned char key ) {
 			interp_num ++;
 			if( ! interp_name[interp_num] ) interp_num = 0;
 			break;
+		case 't':
+			integrator_num ++;
+			if( ! integrator_name[integrator_num] ) integrator_num = 0;
+			break;
 		case '\e':
 			exit(0);
 			break;
@@ -412,7 +419,7 @@ void smoke2D::mouse( double x, double y, int state ) {
 void smoke2D::motion( double x, double y, double dx, double dy ) {
 	int i = min(N-1,max(0,x*N));
 	int j = min(N-1,max(0,y*N));
-	double m = 1.0;
+	double m = 0.9;
 	u[0][i][j] = u[0][i+1][j] = min(m/N/DT,max(-m/N/DT,m*N*dx));
 	u[1][i][j] = u[1][i][j+1] = min(m/N/DT,max(-m/N/DT,m*N*dy));
 	
@@ -423,7 +430,7 @@ void smoke2D::motion( double x, double y, double dx, double dy ) {
 		for( int ii = -w; ii <= w; ii++ ) {
 			for( int jj = -w; jj <= w; jj++ ) {
 				if( hypot(ii,jj) <= w ) {
-					c[i+ii][j+jj] = 2.0;
+					c[i+ii][j+jj] = 3.0;
 				}
 			}
 		}

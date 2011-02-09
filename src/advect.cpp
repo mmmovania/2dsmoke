@@ -412,7 +412,7 @@ void advect::advect( int method, int interp, int integrator, double ***u, double
 			// k1 = f'(x + k0*dt)
 			op2D(tmp[0], u[0], k[0][0], 1.0, dt, n+1);
 			op2D(tmp[1], u[1], k[0][1], 1.0, dt, n+1);
-			op2D(tmp[2], c,    k[0][2], 0.5, dt, cn);
+			op2D(tmp[2], c,    k[0][2], 1.0, dt, cn);
 			advect_step( method, tmp, tmp[2], n, cn, k[1], dt );
 			
 			// y = x + 0.5*dt*(k0+k1)
@@ -431,19 +431,19 @@ void advect::advect( int method, int interp, int integrator, double ***u, double
 			// k1 = f'(x + 0.5*k0*dt)
 			op2D(tmp[0], u[0], k[0][0], 1.0, 0.5*dt, n+1);
 			op2D(tmp[1], u[1], k[0][1], 1.0, 0.5*dt, n+1);
-			op2D(tmp[2], c,    k[0][2], 0.5, 0.5*dt, cn);
+			op2D(tmp[2], c,    k[0][2], 1.0, 0.5*dt, cn);
 			advect_step( method, tmp, tmp[2], n, cn, k[1], dt );
 			
 			// k2 = f'(x + 0.5*k1*dt)
 			op2D(tmp[0], u[0], k[1][0], 1.0, 0.5*dt, n+1);
 			op2D(tmp[1], u[1], k[1][1], 1.0, 0.5*dt, n+1);
-			op2D(tmp[2], c,    k[1][2], 0.5, 0.5*dt, cn);
+			op2D(tmp[2], c,    k[1][2], 1.0, 0.5*dt, cn);
 			advect_step( method, tmp, tmp[2], n, cn, k[2], dt );
 			
 			// k3 = f'(x + 0.5*k2*dt)
 			op2D(tmp[0], u[0], k[2][0], 1.0, dt, n+1);
 			op2D(tmp[1], u[1], k[2][1], 1.0, dt, n+1);
-			op2D(tmp[2], c,    k[2][2], 0.5, dt, cn);
+			op2D(tmp[2], c,    k[2][2], 1.0, dt, cn);
 			advect_step( method, tmp, tmp[2], n, cn, k[3], dt );
 			
 			// y = x + dt*(k0+2*k1+2*k2+k3)/6

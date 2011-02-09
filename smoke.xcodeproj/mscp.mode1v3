@@ -272,7 +272,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>8</integer>
+									<integer>4</integer>
 									<integer>1</integer>
 									<integer>0</integer>
 								</array>
@@ -297,7 +297,7 @@
 							<real>186</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>207 79 1353 1075 0 0 1920 1178 </string>
+						<string>473 -114 1353 1075 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -315,7 +315,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>advect.cpp</string>
+								<string>smoke2D.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -323,11 +323,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>advect.cpp</string>
+										<string>smoke2D.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>C106881A130273E2007B611D</string>
+										<string>C1068924130282DF007B611D</string>
 										<key>history</key>
 										<array>
 											<string>C1C47A2112FF8F7000F3F1D6</string>
@@ -338,13 +338,13 @@
 											<string>C106876413026DA9007B611D</string>
 											<string>C106876813026DA9007B611D</string>
 											<string>C106876913026DA9007B611D</string>
-											<string>C10687CC13027199007B611D</string>
-											<string>C10687CF13027199007B611D</string>
-											<string>C10687FF13027338007B611D</string>
-											<string>C1068811130273A6007B611D</string>
-											<string>C1068812130273A6007B611D</string>
-											<string>C1068813130273A6007B611D</string>
-											<string>C10687D5130271AE007B611D</string>
+											<string>C10688B013027DC3007B611D</string>
+											<string>C10688F41302802A007B611D</string>
+											<string>C10688FB13028048007B611D</string>
+											<string>C1068908130280FC007B611D</string>
+											<string>C1068909130280FC007B611D</string>
+											<string>C106890A130280FC007B611D</string>
+											<string>C106890B130280FC007B611D</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -358,7 +358,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {1145, 1029}}</string>
 								<key>RubberWindowFrame</key>
-								<string>207 79 1353 1075 0 0 1920 1178 </string>
+								<string>473 -114 1353 1075 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -378,7 +378,7 @@
 								<key>Frame</key>
 								<string>{{0, 1034}, {1145, 0}}</string>
 								<key>RubberWindowFrame</key>
-								<string>207 79 1353 1075 0 0 1920 1178 </string>
+								<string>473 -114 1353 1075 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
@@ -542,7 +542,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>C106881B130273E2007B611D</string>
+		<string>C1068925130282DF007B611D</string>
 		<string>C106855813024DB5007B611D</string>
 		<string>C106855913024DB5007B611D</string>
 		<string>1C78EAAD065D492600B07095</string>
@@ -551,7 +551,7 @@
 		<string>/Users/mscp/Desktop/smoke/smoke.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>207 79 1353 1075 0 0 1920 1178 </string>
+	<string>473 -114 1353 1075 0 0 1920 1178 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>

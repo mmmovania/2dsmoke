@@ -14,8 +14,8 @@
 #include <sys/time.h>
 #endif
 
-int win_x = 500;
-int win_y = 500;
+int win_x = 512;
+int win_y = 512;
 int prev_x, prev_y;
 int mstat = 1;
 

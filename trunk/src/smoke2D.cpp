@@ -28,7 +28,7 @@
 int	N;		// Fluid Grid Size
 int	M;		// Smoke Grid Size
 
-#define		DT		0.05				// Watch for a CFL Limit in case of Derivative Advection
+#define		DT		0.1			// Watch for a CFL Limit in case of Derivative Advection
 
 #define NUM_ITER	500
 
@@ -259,7 +259,7 @@ void smoke2D::display() {
 		} END_FOR
 		 
 		FOR_EVERY_CELL(N) {
-			double press = 1000.0*(N == 128 ? 10 : 1)*p[i][j];
+			double press = 3000.0*(N == 128 ? 10 : 1)*p[i][j];
 			glColor4d(press>0,0.0,press<0,fabs(press));
 			
 			double h = 1.0/N;
@@ -325,7 +325,7 @@ void smoke2D::display() {
 			double h = 1.0/N;
 			double p[2] = {i*h+h/2.0,j*h+h/2.0};
 			double v[2] = {0.5*u[0][i][j]+0.5*u[0][i+1][j],0.5*u[1][i][j]+0.5*u[1][i][j+1]};
-			double s = 8.0;
+			double s = 10.0;
 			glBegin(GL_LINES);
 			glVertex2d(p[0],p[1]);
 			glVertex2d(p[0]+s*DT*v[0],p[1]+s*DT*v[1]);
@@ -345,7 +345,7 @@ void smoke2D::display() {
 	if( advection_num > 2 )
 		sprintf( tmp, "%s (Time=%.2fms, Interp=%s)", advection_name[advection_num], advectTime/(double)1000, interp_name[interp_num] );
 	else 
-		sprintf( tmp, "%s (Time=%.2fms, Time Integrator=%s)", advection_name[advection_num], advectTime/(double)1000, integrator_name[integrator_num] );
+		sprintf( tmp, "%s (Time=%.2fms, Integrator=%s)", advection_name[advection_num], advectTime/(double)1000, integrator_name[integrator_num] );
 	cnt = 0;
 	drawBitmapString(tmp);
 	
@@ -360,10 +360,10 @@ void smoke2D::display() {
 	raw_drawBitmapString("Press \"s\" to switch pressure solver");
 	
 	glRasterPos2d(0.04, 0.84);
-	raw_drawBitmapString("Press \"i\" to switch Semi-Lagrangian interpolation method");
+	raw_drawBitmapString("Press \"i\" to switch interpolation method");
 	
 	glRasterPos2d(0.04, 0.81);
-	raw_drawBitmapString("Press \"t\" to switch time integrator");
+	raw_drawBitmapString("Press \"t\" to switch integrator");
 	
 	glRasterPos2d(0.04, 0.78);
 	raw_drawBitmapString("Press \"p\" to toggle pressure view");
@@ -419,7 +419,7 @@ void smoke2D::mouse( double x, double y, int state ) {
 void smoke2D::motion( double x, double y, double dx, double dy ) {
 	int i = min(N-1,max(0,x*N));
 	int j = min(N-1,max(0,y*N));
-	double m = 0.9;
+	double m = 1.0;
 	u[0][i][j] = u[0][i+1][j] = min(m/N/DT,max(-m/N/DT,m*N*dx));
 	u[1][i][j] = u[1][i][j+1] = min(m/N/DT,max(-m/N/DT,m*N*dy));
 	
@@ -430,7 +430,7 @@ void smoke2D::motion( double x, double y, double dx, double dy ) {
 		for( int ii = -w; ii <= w; ii++ ) {
 			for( int jj = -w; jj <= w; jj++ ) {
 				if( hypot(ii,jj) <= w ) {
-					c[i+ii][j+jj] = 3.0;
+					c[i+ii][j+jj] = 2.0;
 				}
 			}
 		}
